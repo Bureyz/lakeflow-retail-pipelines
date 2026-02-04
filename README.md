@@ -1,7 +1,7 @@
 # Lakeflow Retail Pipelines Demo
 
 **Author:** Krzysztof Burejza  
-**Technology:** Databricks Lakeflow Pipelines (Delta Live Tables), Unity Catalog, Spark Structured Streaming.
+**Technology:** Databricks Lakeflow Pipelines, Unity Catalog, Spark Structured Streaming.
 
 ---
 
@@ -49,13 +49,13 @@ common/01_Data_Setup.py
 You can run the pipeline in two flavors: **SQL** or **Python**.
 
 #### Option A: SQL Version
-1.  Create a new DLT Pipeline.
+1.  Create a new Lakeflow Pipeline.
 2.  Point "Source Code" to the **`SQL/`** folder.
 3.  Set Target Schema to `lakeflow_demo`.
 4.  Click **Start**.
 
 #### Option B: Python Version
-1.  Create a new DLT Pipeline.
+1.  Create a new Lakeflow Pipeline.
 2.  Point "Source Code" to the **`Python/`** folder.
 3.  Set Target Schema to `lakeflow_demo`.
 4.  Click **Start**.
