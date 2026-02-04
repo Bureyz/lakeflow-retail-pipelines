@@ -5,6 +5,6 @@ CREATE OR REFRESH STREAMING TABLE silver_loyalty;
 APPLY CHANGES INTO silver_loyalty
 FROM STREAM(bronze_loyalty)
 KEYS (loyalty_segment_id)
-SEQUENCE BY source_timestamp
-COLUMNS * EXCEPT (source_timestamp)
+SEQUENCE BY ingestion_timestamp
+COLUMNS * EXCEPT (ingestion_timestamp, source_file_path, source_file_name, source_file_modification_time)
 STORED AS SCD TYPE 1;

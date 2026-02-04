@@ -4,5 +4,6 @@ AS SELECT
   loyalty_segment_id,
   loyalty_segment_description,
   unit_threshold,
-  vip_row_id
+  valid_from,
+  valid_to
 FROM silver_loyalty;

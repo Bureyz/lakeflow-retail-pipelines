@@ -1,13 +1,13 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Common Data Setup for Lakeflow Demo
-# MAGIC 
+# MAGIC
 # MAGIC This script simulates a realistic "Landing Zone" for our Lakeflow Pipeline. 
 # MAGIC Since built-in datasets are static (`/databricks-datasets/retail-org`), we need to:
-# MAGIC 1. Copy them to a writable location (`/tmp/demo/lakeflow/...`).
+# MAGIC 1. Copy them to a writable location (`Volumes/lakeflow_demo/default/dataset/landing`).
 # MAGIC 2. Generate "Updates" to simulate Slowly Changing Dimensions (SCD Type 2).
 # MAGIC 3. Simulate "New Data" arriving for Streaming ingestion.
-# MAGIC 
+# MAGIC
 # MAGIC **Run this notebook ONCE before starting the DLT/Lakeflow Pipeline.**
 
 # COMMAND ----------
@@ -41,6 +41,18 @@ if RESET_DATA:
 
 # COMMAND ----------
 
+# --- Products (JSON) ---
+df_prod = spark.read.option("header", True).option("inferSchema", True).option("delimiter", ";").csv(f"{SOURCE_PATH}/products")
+
+df_prod = df_prod.withColumn("source_timestamp", F.expr("current_timestamp() - interval 365 days"))
+df_prod.write.format("json").mode("overwrite").save(paths["products"])
+print(f"Copied products to {paths['products']}")
+
+display(df_prod)
+
+# COMMAND ----------
+
+# DBTITLE 1,Cell 5
 # --- Customers (CSV) ---
 # Reading original customers
 df_cust = spark.read.option("header", True).csv(f"{SOURCE_PATH}/customers")
@@ -53,24 +65,52 @@ df_cust_init = df_cust.withColumn("operation", F.lit("INSERT")) \
 df_cust_init.write.format("csv").option("header", True).mode("append").save(paths["customers"])
 print(f"Copied {df_cust_init.count()} customers to {paths['customers']}")
 
-# --- Products (CSV) ---
-df_prod = spark.read.option("header", True).csv(f"{SOURCE_PATH}/products")
-df_prod.withColumn("source_timestamp", F.expr("current_timestamp() - interval 365 days")) \
-       .write.format("csv").option("header", True).mode("append").save(paths["products"])
-print(f"Copied products to {paths['products']}")
+
+# --- Sales Orders (JSON) - FLATTENED ---
+# Reading original sales
+df_sales = spark.read.json(f"{SOURCE_PATH}/sales_orders")
+
+# Flatten the complex structure
+df_sales_flat = df_sales.select(
+    F.col("order_number"),
+    F.col("customer_id"),
+    F.col("customer_name"),
+    F.col("order_datetime"),
+    F.col("number_of_line_items"),
+    F.explode("ordered_products").alias("product")
+).select(
+    "order_number",
+    "customer_id",
+    "customer_name",
+    "order_datetime",
+    "number_of_line_items",
+    F.col("product.id").alias("product_id"),
+    F.col("product.name").alias("product_name"),
+    F.col("product.price").alias("unit_price"),
+    F.col("product.qty").alias("quantity"),
+    F.col("product.curr").alias("currency"),
+    F.col("product.unit").alias("unit")
+)
+
+# Write a subset as "History"
+df_sales_flat.limit(1000).write.format("json").mode("append").save(paths["sales"])
+print(f"Copied initial 1000 sales orders (flattened) to {paths['sales']}")
+
+display(df_cust_init)
+
+# COMMAND ----------
 
 # --- Loyalty Segments (CSV) ---
 df_loyalty = spark.read.option("header", True).csv(f"{SOURCE_PATH}/loyalty_segments")
 df_loyalty.write.format("csv").option("header", True).mode("append").save(paths["loyalty"])
 print(f"Copied loyalty segments to {paths['loyalty']}")
 
-# --- Sales Orders (JSON) ---
-# Reading original sales
-df_sales = spark.read.json(f"{SOURCE_PATH}/sales_orders")
+display(df_loyalty)
 
-# Write a subset as "History"
-df_sales.limit(1000).write.format("json").mode("append").save(paths["sales"])
-print(f"Copied initial 1000 sales orders to {paths['sales']}")
+# COMMAND ----------
+
+# DBTITLE 1,Cell 7
+display(df_sales_flat)
 
 # COMMAND ----------
 
@@ -95,26 +135,33 @@ print("Generated 10 customer updates (SCD Type 2 simulation).")
 
 # COMMAND ----------
 
+display(updates_df)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## 3. Simulate New Sales (Streaming)
 # MAGIC Adding more files to `sales_orders` to show Cloud Files (Auto Loader) picking them up.
 
 # COMMAND ----------
 
+# DBTITLE 1,Cell 11
 # Pick another chunk of sales and save as "New Data"
-df_sales_new = df_sales.orderBy(F.rand()).limit(500)
+df_sales_new = df_sales_flat.orderBy(F.rand()).limit(500)
 df_sales_new.write.format("json").mode("append").save(paths["sales"])
-print("Generated 500 new sales orders.")
+print("Generated 500 new sales orders (flattened).")
+
+display(df_sales_new)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Data Readiness
-# MAGIC 
+# MAGIC
 # MAGIC Data is now ready at:
 # MAGIC - `customers`: `/Volumes/lakeflow_demo/default/dataset/landing/customers/` (Contains History + Updates)
 # MAGIC - `products`: `/Volumes/lakeflow_demo/default/dataset/landing/products/`
 # MAGIC - `sales`: `/Volumes/lakeflow_demo/default/dataset/landing/sales_orders/`
 # MAGIC - `loyalty`: `/Volumes/lakeflow_demo/default/dataset/landing/loyalty_segments/`
-# MAGIC 
+# MAGIC
 # MAGIC You can now run the Lakeflow Pipeline (SQL or Python).

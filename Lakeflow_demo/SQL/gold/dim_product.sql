@@ -3,7 +3,8 @@ CREATE OR REFRESH MATERIALIZED VIEW dim_product
 AS SELECT 
   product_id,
   product_name,
-  category,
-  price,
-  description
+  product_category,
+  sales_price,
+  EAN13,
+  EAN5
 FROM silver_products;
