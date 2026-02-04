@@ -5,10 +5,10 @@
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 This project demonstrates a modern **Data Warehouse** implementation using **Databricks Lakeflow Pipelines**. It builds a complete **Star Schema** (Fact & Dimensions) with support for Slowly Changing Dimensions (SCD Type 2) and real-time ingestion.
 
-### 🏗 Architecture
+### Architecture
 The pipeline follows the **Medallion Architecture** (Bronze → Silver → Gold):
 
 1.  **Bronze (Raw Ingestion)**:
@@ -29,7 +29,7 @@ The pipeline follows the **Medallion Architecture** (Bronze → Silver → Gold)
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ### 1. Prerequisites
 *   Databricks Workspace with Unity Catalog enabled.
@@ -62,7 +62,7 @@ You can run the pipeline in two flavors: **SQL** or **Python**.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```text
 lakeflow-retail-pipelines/
 ├── common/
