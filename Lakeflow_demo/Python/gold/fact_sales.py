@@ -1,22 +1,26 @@
-import dlt as dp
-from pyspark.sql.functions import *
+import databricks.pipelines as dp
+from pyspark.sql.functions import col, date_format, lit
 
 @dp.table(
-    comment="Fact Sales with Foreign Keys"
+    name="fact_sales",
+    comment="Fact Sales"
 )
 def fact_sales():
-    sales = dp.read("silver_sales")
-    customers = dp.read("silver_customers").where("__END_AT IS NULL")
-    
-    return sales.join(customers, ["customer_id"], "left") \
-        .select(
-            sales.customer_id,
-            date_format(sales.order_datetime, 'yyyyMMdd').cast('int').alias("date_key"),
-            sales.item.curr.alias("product_id"),
-            customers.loyalty_segment.alias("loyalty_segment_id"),
-            
-            sales.item.qty.alias("quantity"),
-            sales.item.price.alias("unit_price"),
-            sales.total_row_price.alias("total_line_amount"),
-            sales.order_datetime
+    return (
+        dp.read("silver_sales").alias("s")
+        .join(
+            dp.read("silver_customers").alias("c"),
+            (col("s.customer_id") == col("c.customer_id")) & (col("c.__END_AT").isNull()),
+            "left"
         )
+        .select(
+            col("s.customer_id"),
+            date_format(col("s.order_datetime"), 'yyyyMMdd').cast("int").alias("date_key"),
+            col("s.product_id"),
+            col("c.loyalty_segment").alias("loyalty_segment_id"),
+            col("s.quantity"),
+            col("s.unit_price"),
+            (col("s.quantity") * col("s.unit_price")).alias("total_line_amount"),
+            col("s.order_datetime")
+        )
+    )

@@ -1,15 +1,17 @@
-import dlt as dp
+import databricks.pipelines as dp
 from pyspark.sql.functions import *
 
-@dp.table(comment="Generated Date Dimension")
+@dp.table(
+    name="dim_date",
+    comment="Dim Date (Generated)"
+)
 def dim_date():
-    # Helper to generate range of dates
     return (
-        spark.range(0, 365 * 10)
-        .withColumn("calendar_date", date_add(lit("2020-01-01"), col("id").cast("int")))
+        spark.range(0, 365*10)
+        .select(date_add(lit('2020-01-01'), col("id").cast("int")).alias("calendar_date"))
         .select(
-            col("calendar_date"),
-            date_format("calendar_date", "yyyyMMdd").cast("int").alias("date_key"),
+            date_format("calendar_date", 'yyyyMMdd').cast("int").alias("date_key"),
+            "calendar_date",
             year("calendar_date").alias("year"),
             quarter("calendar_date").alias("quarter"),
             month("calendar_date").alias("month"),
