@@ -20,7 +20,6 @@ The pipeline follows the **Medallion Architecture** (Bronze → Silver → Gold)
     *   **SCD Type 2 (History)**: Tracking Customer address changes over time (Full History).
     *   **SCD Type 1 (Current)**: Products & Loyalty segments (Latest State).
     *   **Data Quality**: Enforcing expectations (e.g., valid order amounts) with `EXPECT` constraints.
-    *   **Transformations**: Python UDFs for PII masking (e.g., masking customer names).
 
 3.  **Gold (Business Layer - Star Schema)**:
     *   **Fact Table**: `Fact_Sales` (Transactional grain).
@@ -50,13 +49,13 @@ You can run the pipeline in two flavors: **SQL** or **Python**.
 
 #### Option A: SQL Version
 1.  Create a new Lakeflow Pipeline.
-2.  Point "Source Code" to the **`SQL/`** folder.
+2.  Point "Source Code" to the **`Lakeflow_demo/SQL/`** folder.
 3.  Set Target Schema to `lakeflow_demo`.
 4.  Click **Start**.
 
 #### Option B: Python Version
 1.  Create a new Lakeflow Pipeline.
-2.  Point "Source Code" to the **`Python/`** folder.
+2.  Point "Source Code" to the **`Lakeflow_demo/Python/`** folder.
 3.  Set Target Schema to `lakeflow_demo`.
 4.  Click **Start**.
 
@@ -64,15 +63,16 @@ You can run the pipeline in two flavors: **SQL** or **Python**.
 
 ## Project Structure
 ```text
-lakeflow-retail-pipelines/
+Lakeflow Pipelines/
 ├── common/
 │   └── 01_Data_Setup.py           # Data Generator (SCD2 Simulation)
-├── SQL/                           # Pure SQL Implementation
-│   ├── bronze/                    # Ingestion (read_files)
-│   ├── silver/                    # SCD Logic (APPLY CHANGES)
-│   └── gold/                      # Star Schema (Materialized Views)
-└── Python/                        # PySpark (Declarative Pipelines) Implementation
-    ├── bronze/                    # Ingestion (cloudFiles)
-    ├── silver/                    # SCD Logic (dp.apply_changes & UDFs)
-    └── gold/                      # Star Schema (dp.materialized_view)
+└── Lakeflow_demo/
+    ├── SQL/                       # Pure SQL Implementation
+    │   ├── bronze/                # Ingestion (read_files)
+    │   ├── silver/                # SCD Logic (APPLY CHANGES)
+    │   └── gold/                  # Star Schema (Materialized Views)
+    └── Python/                    # PySpark (Declarative Pipelines) Implementation
+        ├── bronze/                # Ingestion (cloudFiles)
+        ├── silver/                # SCD Logic (dp.apply_changes)
+        └── gold/                  # Star Schema (@dp.table)
 ```
