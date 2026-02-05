@@ -40,7 +40,7 @@ The pipeline follows the **Medallion Architecture** (Bronze → Silver → Gold)
 Run the setup script **once** to generate historical and streaming data:
 ```bash
 # Run this notebook in Databricks
-common/01_Data_Setup.py
+generate_data/01_Data_Setup.py
 ```
 *This script will populate `/Volumes/lakeflow_demo/default/dataset/landing/` with initial history and simulated updates.*
 
